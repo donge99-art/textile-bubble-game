@@ -1,0 +1,6 @@
+{
+  "name": "Textile Bubble Shooter",
+  "description": "섬유의 종류와 특성을 재미있게 학습할 수 있는 버블 슈터 게임",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

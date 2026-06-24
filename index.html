@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>섬유 퀴즈 버블 슈터 🫧</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="./style.css" />
+    <script>
+      // Tailwind Config with Play CDN
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pastelPink: '#ff758f',
+              pastelBlue: '#b5e2fa',
+              pastelYellow: '#fcd34d',
+              pastelGreen: '#a7f3d0',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              cute: ['Jua', 'sans-serif'],
+              dongle: ['Dongle', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="min-h-screen bg-[#0e0720] text-slate-100 flex flex-col md:h-screen md:overflow-hidden font-cute selection:bg-pastelPink selection:text-white">
+    
+    <!-- 1. Top Navigation Bar (헤더) -->
+    <header class="bg-[#1c0f3a] border-b-4 border-slate-950 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg">
+      <div class="flex items-center gap-3">
+        <!-- Cute Animated Logo -->
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pastelPink to-violet-500 flex items-center justify-center text-2xl shadow-lg border-2 border-slate-950 pulse-slow">
+          🫧
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide text-white flex items-center gap-2">
+            섬유 퀴즈 버블 슈터
+            <span class="text-xs font-normal px-2.5 py-0.5 rounded-full bg-pastelYellow text-slate-950 border border-slate-950">가정 교과서 팡팡!</span>
+          </h1>
+          <p class="text-xs text-indigo-300">섬유의 성질에 알맞은 버블을 맞춰 팡팡 터트려보세요! 🦖✨</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Toolbar -->
+      <div class="flex items-center gap-3">
+        <button id="btn-toggle-sound" class="btn-cute-slate px-4 py-2 text-xs font-bold flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+          소리 켬
+        </button>
+
+        <button id="btn-restart" class="btn-cute-rose px-4 py-2 text-xs font-bold flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
+          </svg>
+          새 게임
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. Main Content Layout (메인 콘텐츠 영역) -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+      
+      <!-- [중앙 패널] 버블 슈터 플레이 보드 (Canvas Container) -->
+      <section class="flex-1 bg-[#100824]/80 p-4 md:p-6 flex flex-col items-center justify-center overflow-y-auto md:overflow-hidden gap-4">
+        
+        <!-- 실시간 퀴즈 디스플레이 보드 (가장 중요한 부분) -->
+        <div class="w-full max-w-[480px] bg-[#1a0f35] border-4 border-slate-950 rounded-2xl p-4 shadow-xl flex items-center justify-between gap-3 relative overflow-hidden shrink-0">
+          <!-- Background decoration -->
+          <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full bg-pastelPink/10 blur-xl"></div>
+          
+          <div class="flex-1">
+            <span class="text-[10px] tracking-wider text-pastelPink font-bold block mb-1">📢 이 성질을 가진 섬유를 맞추세요!</span>
+            <div id="loaded-char-text" class="text-sm md:text-base font-bold text-white tracking-wide leading-relaxed animate-fade-in">
+              글자 로딩 중...
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-end gap-1.5 shrink-0">
+            <span class="text-[9px] text-slate-400 font-bold tracking-wider">미션 타입</span>
+            <div id="loaded-fiber-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-[#ff5d8f] text-white border-2 border-slate-950 transition-all shadow-sm">
+              ❓ QUIZ
+            </div>
+          </div>
+        </div>
+
+        <!-- 버블 슈팅 캔버스 프레임 -->
+        <div id="canvas-container" class="relative select-none">
+          <canvas id="game-canvas"></canvas>
+
+          <!-- 콤보 멀티플라이어 시각 표시기 -->
+          <div class="absolute top-12 left-4 px-3 py-1 rounded-full bg-[#1c0f3a]/90 border-2 border-[#ff5d8f] text-xs flex items-center gap-1.5 shadow-lg select-none">
+            <span class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-ping"></span>
+            <span class="text-slate-200">콤보: <span id="combo-display" class="text-pink-400 font-bold">1x</span></span>
+          </div>
+
+          <!-- 실패 페이지 (Game Over Overlay) -->
+          <div id="game-over-overlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fade-in">
+            <div class="w-24 h-24 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-5xl mb-4 animate-bounce border-2 border-rose-500">
+              😭
+            </div>
+            <h2 class="text-3xl font-bold text-rose-400 mb-2 tracking-wide">으앗! 실패했어요...</h2>
+            <p class="text-sm text-slate-300 max-w-xs mb-6 leading-relaxed">
+              섬유 버블들이 위험 한계선을 넘어버렸어요! 다시 한번 힘내서 도전해 봐요! 🦖
+            </p>
+            <button onclick="startNewGame(1)" class="btn-cute-rose px-6 py-3 text-lg font-bold">
+              ✨ 처음부터 다시 도전! ✨
+            </button>
+          </div>
+
+          <!-- 성공 페이지 (Game Win / Level Clear Overlay) -->
+          <div id="game-win-overlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30 animate-fade-in">
+            <div class="w-24 h-24 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center text-5xl mb-4 animate-bounce border-2 border-amber-400">
+              👑
+            </div>
+            <h2 class="text-3xl font-bold text-pastelYellow mb-2 tracking-wide">🎉 스테이지 클리어! 🎉</h2>
+            <p id="win-overlay-desc" class="text-sm text-slate-300 max-w-xs mb-6 leading-relaxed">
+              최고예요! 보드 위의 모든 섬유 버블들을 완벽하게 정복했습니다!
+            </p>
+            <div class="flex flex-col gap-2.5 w-full max-w-xs mb-6 bg-[#1a0f35] p-4 rounded-2xl border-2 border-slate-950">
+              <div class="flex justify-between items-center text-sm text-indigo-200">
+                <span>획득 점수:</span>
+                <span id="win-score" class="font-bold text-lg text-amber-300">0 점</span>
+              </div>
+              <div class="flex justify-between items-center text-sm text-indigo-200">
+                <span>현재 단계:</span>
+                <span id="win-stage" class="font-bold text-lg text-pastelGreen">STAGE 1</span>
+              </div>
+            </div>
+            <button id="btn-next-stage" class="btn-cute-indigo px-8 py-3.5 text-lg font-bold">
+              🌈 다음 신나는 단계로 Go Go! 🌈
+            </button>
+          </div>
+        </div>
+
+        <!-- 슈팅 대포 하단 컨트롤바 -->
+        <div class="w-full max-w-[480px] flex items-center justify-between gap-4 px-1 shrink-0">
+          
+          <!-- 스왑 버튼 -->
+          <button id="btn-swap" class="btn-cute-indigo flex-1 py-3 px-4 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 text-pastelYellow animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            버블 스왑하기 (Space)
+          </button>
+
+          <!-- 다음 버블 미리보기 패널 -->
+          <div class="flex items-center gap-3 bg-[#1c0f3a] border-4 border-slate-950 px-3.5 py-1.5 rounded-2xl shrink-0 shadow-lg max-w-[200px]">
+            <div id="next-bubble-circle" class="w-5 h-5 rounded-full border border-white/20 bg-slate-500"></div>
+            <div class="text-left min-w-0">
+              <span class="text-[9px] text-[#ff5d8f] font-bold block">NEXT QUIZ</span>
+              <span id="next-fiber-name" class="text-xs font-bold text-slate-200 truncate block">대기 중...</span>
+              <span id="next-char-preview" class="hidden"></span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- [우측 패널] 실시간 스코어보드 및 피드백 기록 로그 -->
+      <section class="w-full md:w-80 bg-[#140b2b] border-l-4 border-slate-950 flex flex-col h-auto md:h-full shrink-0">
+        
+        <!-- 점수판 정보 (Top) -->
+        <div class="p-5 border-b-4 border-slate-950 bg-[#1c0f3a] flex flex-col gap-4 shrink-0">
+          <div class="flex items-center justify-between">
+            <span id="level-display" class="px-3 py-1 rounded-full text-xs font-bold bg-[#ff5d8f] text-white border-2 border-slate-950">STAGE 1</span>
+            <div class="flex items-center gap-1.5 text-xs text-indigo-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>실시간 연동</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Current Score -->
+            <div class="bg-slate-950 border-2 border-slate-950 p-3.5 rounded-xl flex flex-col shadow-inner">
+              <span class="text-[10px] text-indigo-300 font-bold tracking-wider">MY SCORE</span>
+              <span id="score-display" class="text-2xl font-bold text-white font-mono-custom mt-1">0</span>
+            </div>
+            <!-- High Score -->
+            <div class="bg-slate-950 border-2 border-slate-950 p-3.5 rounded-xl flex flex-col shadow-inner">
+              <span class="text-[10px] text-indigo-300 font-bold tracking-wider">HIGH SCORE</span>
+              <span id="highscore-display" class="text-2xl font-bold text-pastelYellow font-mono-custom mt-1">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 피드백 해설 카드 -->
+        <div class="p-5 border-b-4 border-slate-950 bg-slate-950/20 shrink-0">
+          <span class="text-[10px] font-bold text-[#ff5d8f] block mb-2">💡 마지막 발사 분석 및 퀴즈 해설</span>
+          <div class="bg-[#1c0f3a] border-2 border-slate-950 rounded-xl p-4 flex gap-3.5 items-start shadow-md">
+            <div id="feedback-icon-container" class="shrink-0 mt-0.5">
+              <div class="w-11 h-11 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-xl border border-pink-400">🦖</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 id="feedback-title" class="font-bold text-sm text-white">체험형 섬유 학습터</h3>
+              <p id="feedback-desc" class="text-xs text-indigo-200 leading-relaxed mt-1">조준선을 맞춰 퀴즈 버블을 쏘세요. 알맞은 성질의 버블에 닿으면 점수를 획득할 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 실시간 정답/오답 로그 기록 피드 -->
+        <div class="flex-1 flex flex-col overflow-hidden min-h-[200px]">
+          <div class="px-5 py-3 border-b-2 border-slate-950 bg-slate-950/40 flex justify-between items-center shrink-0">
+            <span class="text-[11px] font-bold text-indigo-300 uppercase">최근 발사 결과 목록</span>
+            <span class="text-[10px] text-pastelPink">콤보 보너스 팡팡!</span>
+          </div>
+          
+          <div id="log-feed" class="flex-1 overflow-y-auto p-5 space-y-3.5">
+            <!-- script.js에 의해 동적으로 생성 삽입되는 피드 항목들 -->
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- 3. Keyboard Shortcut Helper Listener -->
+    <script>
+      // 스페이스바를 누르면 스왑이 가능하도록 단축키 연결
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          document.getElementById("btn-swap").click();
+        }
+      });
+    </script>
+    
+    <!-- Custom script binding -->
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>
